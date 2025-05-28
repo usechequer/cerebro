@@ -27,8 +27,17 @@ func main() {
 	})
 	authSubRouter.HandlerFunc(proxy(os.Getenv("CARBON_API_URL")))
 
-	userSubRouter := router.PathPrefix("/users").Subrouter()
-	userSubRouter.HandleFunc("/*", proxy(os.Getenv("CARBON_API_URL")))
+	userSubRouter := router.PathPrefix("/users").Subrouter().MatcherFunc(func(request *http.Request, requestMatcher *mux.RouteMatch) bool {
+		match, _ := regexp.MatchString("/users.*", request.URL.Path)
+		return match
+	})
+	userSubRouter.HandlerFunc(proxy(os.Getenv("CARBON_API_URL")))
+
+	projectSubRouter := router.PathPrefix("/projects").Subrouter().MatcherFunc(func(request *http.Request, requestMatcher *mux.RouteMatch) bool {
+		match, _ := regexp.MatchString("/projects.*", request.URL.Path)
+		return match
+	})
+	projectSubRouter.HandlerFunc(proxy(os.Getenv("NITRO_API_URL")))
 
 	port := fmt.Sprintf(":%s", os.Getenv("APP_PORT"))
 	fmt.Printf("Gateway is running on " + port)
